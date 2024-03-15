@@ -1,0 +1,10 @@
+
+*.bsp
+*.lbl
+*.ti
+*.tls
+*.pc
+*.tpc
+*.pdf
+
+tr2etq
