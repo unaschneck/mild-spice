@@ -1,0 +1,17 @@
+astropy==6.0.0
+astropy-iers-data==0.2024.3.18.0.29.47
+asttokens==2.4.1
+contourpy==1.2.0
+cycler==0.12.1
+fonttools==4.50.0
+kiwisolver==1.4.5
+matplotlib==3.8.3
+numpy==1.26.4
+packaging==24.0
+pillow==10.2.0
+pyerfa==2.0.1.1
+pyparsing==3.1.2
+python-dateutil==2.9.0.post0
+PyYAML==6.0.1
+six==1.16.0
+spiceypy==6.0.0

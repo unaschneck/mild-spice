@@ -8,3 +8,5 @@
 *.pdf
 
 tr2etq
+mild_spice_env/
+__pycache__/

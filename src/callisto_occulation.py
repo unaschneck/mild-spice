@@ -2,9 +2,32 @@ import numpy as np
 import matplotlib.pyplot as plt
 import spiceypy as spice
 import typing
-
+import sys
+import logging
 
 import mild_spice as mild
+
+
+def make_logger(logname="mylog", level=logging.WARNING, log_to_file=False):
+
+    personal_note_logger = logging.getLogger()
+    personal_note_logger.setLevel(level)
+
+    formatter = logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(funcName)s() [line %(lineno)d] - %(message)s'
+    )
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+    personal_note_logger.addHandler(stream_handler)
+
+    # save to .log file
+    if log_to_file:
+        file_handler = logging.FileHandler(logname + '.log')
+        file_handler.setFormatter(formatter)
+        personal_note_logger.addHandler(file_handler)
+
+    return personal_note_logger
 
 
 def where_is(name: str,times: typing.List[float]) -> np.ndarray:
@@ -34,6 +57,7 @@ def occult_times() -> typing.List[float]:
     find times when callisto is occulting Galileo
     '''
 
+    mylog.warning("This function doesn't work. Not sure why.")
     dark_times = spice.gfoclt(occtype="ANY",front="CALLISTO",back="SUN",obsrvr="GALILEO ORBITER")
     print(dark_times[0:3])
 
@@ -43,10 +67,11 @@ def occult_times() -> typing.List[float]:
 
 def main() -> None:
 
-    # load metakernel that directs to all kernels
-    mild.loadme("./Galileo_Callisto_MetaKernal.txt")
 
-    RJ = int((mild.CONSTANTS['JUPITER_RADIUS'].value)/1000)
+    # load metakernel that directs to all kernels
+    mild.loadme("Galileo_Callisto_MetaKernal.txt")
+
+    RJ = int((mild.CONSTANTS['JUPITER_RADIUS'].value)/1000) # Jupiter radius
 
     C3_pass = mild.make_pass(mild.IMPORTANT_DATES['C3_START'], mild.IMPORTANT_DATES['C3_END'])
     C9_pass = mild.make_pass(mild.IMPORTANT_DATES['C9_START'], mild.IMPORTANT_DATES['C9_END'])
@@ -63,6 +88,9 @@ def main() -> None:
     gal_C9_pos = where_is('GALILEO ORBITER',C9_pass)
     cal_orbit_pos = where_is('CALLISTO', callisto_orbit_time())
     sun_pos = np.mean(where_is('SUN',callisto_orbit_time()),axis=1)
+
+    # make state
+
 
 
     # PLOT STUFF
@@ -93,4 +121,6 @@ def main() -> None:
     spice.kclear()
 
 if __name__ == '__main__':
+
+    mylog = make_logger(level=logging.INFO)
     main()
