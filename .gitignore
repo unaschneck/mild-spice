@@ -8,5 +8,5 @@
 *.pdf
 
 tr2etq
-mild_spice_env/
+myvenv/
 __pycache__/

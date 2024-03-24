@@ -1,33 +1,37 @@
+# Built-in Python functions
+import sys
+import logging
+
+# External Python libraries
 import numpy as np
 import matplotlib.pyplot as plt
 import spiceypy as spice
 import typing
-import sys
-import logging
+from matplotlib.colors import LinearSegmentedColormap
 
+# Local Python libraries
 import mild_spice as mild
 
 
-def make_logger(logname="mylog", level=logging.WARNING, log_to_file=False):
+_mylog = mild.make_logger(level=logging.INFO)
 
-    personal_note_logger = logging.getLogger()
-    personal_note_logger.setLevel(level)
 
-    formatter = logging.Formatter(
-        '%(asctime)s - %(levelname)s - %(funcName)s() [line %(lineno)d] - %(message)s'
-    )
+def gal_to_earth_vec(times):
 
-    stream_handler = logging.StreamHandler()
-    stream_handler.setFormatter(formatter)
-    personal_note_logger.addHandler(stream_handler)
+    intersection_state = []
 
-    # save to .log file
-    if log_to_file:
-        file_handler = logging.FileHandler(logname + '.log')
-        file_handler.setFormatter(formatter)
-        personal_note_logger.addHandler(file_handler)
+    for et in times:
+        state, _ = spice.spkezr('GALILEO ORBITER', et, 'J2000', 'NONE', 'EARTH')
+        galileo_position = state[:3]
 
-    return personal_note_logger
+        earth_position, _ = spice.spkezr('EARTH', et, 'J2000', 'NONE', 'GALILEO ORBITER')
+        direction_vector = np.array(galileo_position) - np.array(earth_position[:3])
+
+        intersection_state.append(spice.fovray('-77024', direction_vector, 'J2000', 'NONE', 'GALILEO ORBITER', et)[0])
+
+
+    return intersection_state
+
 
 
 def where_is(name: str,times: typing.List[float]) -> np.ndarray:
@@ -52,16 +56,30 @@ def callisto_orbit_time() -> typing.List[float]:
 
     return orbit_time
 
-def occult_times() -> typing.List[float]:
+def mag_see_earth() -> typing.List[bool]:
+
     '''
-    find times when callisto is occulting Galileo
+    find times when Galileo boom pointing at Earth
     '''
 
-    mylog.warning("This function doesn't work. Not sure why.")
-    dark_times = spice.gfoclt(occtype="ANY",front="CALLISTO",back="SUN",obsrvr="GALILEO ORBITER")
-    print(dark_times[0:3])
+    inst = -77024
+
+
 
     return
+
+def wrt_jupiter(times: typing.List[float],NAIF: int) -> typing.Tuple[typing.List[np.ndarray], typing.List[np.ndarray]]:
+
+    pos = []
+    vel = []
+
+    for et in times:
+        state_vec = spice.spkacs(NAIF,et,"J2000","NONE",599)[0]
+        pos.append(state_vec[:3])
+        vel.append(state_vec[3:])
+
+    return pos, vel
+
 
 
 
@@ -69,7 +87,7 @@ def main() -> None:
 
 
     # load metakernel that directs to all kernels
-    mild.loadme("Galileo_Callisto_MetaKernal.txt")
+    mild.loadme("Galileo_Callisto_MetaKernal.txt", _mylog)
 
     RJ = int((mild.CONSTANTS['JUPITER_RADIUS'].value)/1000) # Jupiter radius
 
@@ -91,6 +109,42 @@ def main() -> None:
 
     # make state
 
+
+    spos, svel = wrt_jupiter(mild.utc2eph(CA),10)
+    cpos, cvel = wrt_jupiter(mild.utc2eph(CA),504)
+
+    vis2gal = gal_to_earth_vec(mild.utc2eph(CA))
+
+    '''
+    fig, ax = plt.subplots()
+    sunx = [posi[0] for posi in spos]
+    suny = [posi[1] for posi in spos]
+    sunz = [posi[2] for posi in spos]
+    sunvx = [veli[0] for veli in svel]
+    sunvy = [veli[1] for veli in svel]
+    sunvz = [veli[2] for veli in svel]
+
+    calx = [posi[0] for posi in cpos]
+    caly = [posi[1] for posi in cpos]
+    calz = [posi[2] for posi in cpos]
+    calvx = [veli[0] for veli in cvel]
+    calvy = [veli[1] for veli in cvel]
+    calvz = [veli[2] for veli in cvel]
+
+    relative_time = [t - min(mild.utc2eph(CA)) for t in mild.utc2eph(CA)]
+    colors = [(0.8, 0.8, 1), (0, 0, 0.5)]  # Light blue to dark blue
+    colorc = [(1, 0.8, 0.8), (0.5, 0, 0)]  # Light red to dark red
+    cm = LinearSegmentedColormap.from_list('custom_cmap', colors)
+    cmc = LinearSegmentedColormap.from_list('custom_cmap', colorc)
+
+    plt.quiver(np.divide(sunx,RJ),np.divide(suny,RJ),sunvx,sunvy,color="k", scale = 200)
+    plt.scatter(np.divide(sunx,RJ),np.divide(suny,RJ),c=relative_time, cmap=cm, vmin=min(relative_time), vmax=max(relative_time),label='sun')
+    plt.scatter(np.divide(calx,RJ),np.divide(caly,RJ),c='r', label='callisto')
+    plt.colorbar(label='Time')
+    plt.legend()
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.show()
 
 
     # PLOT STUFF
@@ -115,12 +169,10 @@ def main() -> None:
     plt.ylabel('Y [$R_J$]')
 
     plt.show()
-
+    '''
 
     # Clean up the kernels
     spice.kclear()
 
 if __name__ == '__main__':
-
-    mylog = make_logger(level=logging.INFO)
     main()

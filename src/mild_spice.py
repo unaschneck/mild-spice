@@ -2,6 +2,8 @@ import numpy as np
 import spiceypy as spice
 import typing
 from astropy import units
+import logging
+from typing import Optional
 
 
 '''
@@ -10,7 +12,7 @@ Useful functionality for working with spiceypy
 
 # instrument NAIF ids: https://pirlwww.lpl.arizona.edu/resources/guide/software/SPICE/naif_ids.html
 # spacecraft NAIF ids:  https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/naif_ids.html
-
+# planet NAIF ids: https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/naif_ids.html
 
 
 IMPORTANT_DATES = {
@@ -33,14 +35,14 @@ CONSTANTS = {
 }
 
 
-def loadme(metakernel_name: str) -> None:
+def loadme(metakernel_name: str, _mylog: logging.RootLogger) -> None:
 
     '''
     load and display kernels
     '''
 
     spice.furnsh(metakernel_name)
-    view_kernels()
+    view_kernels(_mylog)
 
     return
 
@@ -54,14 +56,14 @@ def utc2eph(utc_times: typing.List[str]) -> typing.List[float]:
 
     return ephemeris_times
 
-def view_kernels() -> None:
+def view_kernels(_mylog: logging.RootLogger) -> None:
 
     '''
     show name of all loaded kernels
     '''
 
     num_kernels = spice.ktotal('ALL')
-    print(f"{num_kernels} loaded kernels from {spice.kdata(0,'all',100,100,100)[0]}: " )
+    _mylog.info(f"{num_kernels} loaded kernels from {spice.kdata(0,'all',100,100,100)[0]}: " )
     for i in range(num_kernels):
         if i != 0:
             print("#",i,"\t",spice.kdata(i,'all',100,100,100)[0])
@@ -87,6 +89,30 @@ def make_pass(start_time: str, end_time: str,num_pts: int = 100) -> typing.List[
     pass_time = np.linspace(pass_time[0],pass_time[-1],num=num_pts)
 
     return pass_time
+
+def make_logger(logname="mylog", level=logging.WARNING, log_to_file=False) -> logging.RootLogger:
+
+    '''
+    make a log file for debugging and recording
+    '''
+    _personal_note_logger = logging.getLogger()
+    _personal_note_logger.setLevel(level)
+
+    _formatter = logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(funcName)s() [line %(lineno)d] - %(message)s'
+    )
+
+    _stream_handler = logging.StreamHandler()
+    _stream_handler.setFormatter(_formatter)
+    _personal_note_logger.addHandler(_stream_handler)
+
+    # save to .log file
+    if log_to_file:
+        _file_handler = logging.FileHandler(logname + '.log')
+        _file_handler.setFormatter(_formatter)
+        _personal_note_logger.addHandler(_file_handler)
+
+    return _personal_note_logger
 
 
 

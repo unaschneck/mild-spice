@@ -1,6 +1,5 @@
 astropy==6.0.0
 astropy-iers-data==0.2024.3.18.0.29.47
-asttokens==2.4.1
 contourpy==1.2.0
 cycler==0.12.1
 fonttools==4.50.0

@@ -20,4 +20,4 @@
 # 3  981005_PLTEPH-DE405S.bsp           SPK  Solar System Ephemeris
 # 4  pck00011.tpc			PCK  Planetary Constants
 # 5  latest_leapseconds.tls             LSK  Leapsecond kernel
-# 6  gll37001.ti			IK   NIMs pointing information
+# 6  gll24001.ti			IK   EUV (mounted on mag boom) pointing information
