@@ -9,8 +9,8 @@
 	'gll_951120_021126_raj2021.bsp',
 	'981005_PLTEPH-DE405S.bsp',
 	'pck00011.tpc',
-	'latest_leapseconds.tls',
-	'gll37001.ti'
+	'latest_leapseconds.tls'
+	
 )
 
 \begintext

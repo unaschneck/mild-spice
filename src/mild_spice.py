@@ -4,7 +4,7 @@ import typing
 from astropy import units
 import logging
 from typing import Optional
-
+import os
 
 '''
 Useful functionality for working with spiceypy
@@ -41,7 +41,13 @@ def loadme(metakernel_name: str, _mylog: logging.RootLogger) -> None:
     load and display kernels
     '''
 
-    spice.furnsh(metakernel_name)
+    spice.furnsh(metakernel_name) # ephemerides and geometric data
+
+    for fname in os.listdir(os.getcwd()):
+        if fname.endswith('.ti'):
+            txt_kern = os.path.join(os.getcwd(),fname)
+            spice.ldpool(txt_kern) # textual kernel variables
+
     view_kernels(_mylog)
 
     return

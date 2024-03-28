@@ -17,17 +17,25 @@ _mylog = mild.make_logger(level=logging.INFO)
 
 
 def gal_to_earth_vec(times):
+    '''
+    find if the boom's FOV is pointing at Earth
+    '''
 
     intersection_state = []
 
+    abcor = 'NONE'
+
     for et in times:
-        state, _ = spice.spkezr('GALILEO ORBITER', et, 'J2000', 'NONE', 'EARTH')
+        state, _ = spice.spkezr('GALILEO ORBITER', et, 'J2000', abcor, 'EARTH')
         galileo_position = state[:3]
 
-        earth_position, _ = spice.spkezr('EARTH', et, 'J2000', 'NONE', 'GALILEO ORBITER')
+        earth_position, _ = spice.spkezr('EARTH', et, 'J2000', abcor, 'GALILEO ORBITER')
         direction_vector = np.array(galileo_position) - np.array(earth_position[:3])
 
-        intersection_state.append(spice.fovray('-77024', direction_vector, 'J2000', 'NONE', 'GALILEO ORBITER', et)[0])
+        _mylog.critical("This doesn't work because there is not FOV info for the boom and \
+        no SPICE info for magnetometer. Galileo predates SPICE, so they are still putting \
+        together the mission kernels.")
+        intersection_state.append(spice.fovray('-77024', direction_vector, 'J2000', abcor, 'GALILEO ORBITER', et)[0])
 
 
     return intersection_state
@@ -40,7 +48,9 @@ def where_is(name: str,times: typing.List[float]) -> np.ndarray:
     find position of object [name] relative to jupiter
     '''
 
-    obj_pos = spice.spkpos(name, times, 'J2000', 'NONE', 'JUPITER')[0]
+    abcor = 'LT+S'
+
+    obj_pos = spice.spkpos(name, times, 'J2000', abcor, 'JUPITER')[0]
 
     return obj_pos.T
 
@@ -73,8 +83,9 @@ def wrt_jupiter(times: typing.List[float],NAIF: int) -> typing.Tuple[typing.List
     pos = []
     vel = []
 
+    abcor = 'LT+S'
     for et in times:
-        state_vec = spice.spkacs(NAIF,et,"J2000","NONE",599)[0]
+        state_vec = spice.spkacs(NAIF,et,"J2000", abcor,599)[0]
         pos.append(state_vec[:3])
         vel.append(state_vec[3:])
 
@@ -114,6 +125,7 @@ def main() -> None:
     cpos, cvel = wrt_jupiter(mild.utc2eph(CA),504)
 
     vis2gal = gal_to_earth_vec(mild.utc2eph(CA))
+    print(vis2gal)
 
     '''
     fig, ax = plt.subplots()
